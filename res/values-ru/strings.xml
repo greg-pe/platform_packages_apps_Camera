@@ -45,8 +45,7 @@
     <string name="pref_camera_recordlocation_title" msgid="371208839215448917">"Записывать местоположение"</string>
     <string name="pref_camera_recordlocation_entry_off" msgid="8888142742988946038">"Выкл."</string>
     <string name="pref_camera_recordlocation_entry_on" msgid="7954533529969575594">"Вкл."</string>
-<<<<<<< HEAD
-    <string name="pref_video_quality_title" msgid="8245379279801096922">"Качество видео"</string>
+   <string name="pref_video_quality_title" msgid="8245379279801096922">"Качество видео"</string>
     <string name="pref_video_quality_entry_high" msgid="2874184763684055612">"Высокое (30 мин.)"</string>
     <string name="pref_video_quality_entry_low" msgid="5282945640948667598">"Низкое (30 мин.)"</string>
     <string name="pref_video_quality_entry_mms" msgid="2271260293894247704">"MMS (низкое, 30 с.)"</string>
