@@ -189,6 +189,8 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
 
     private CameraSound mCameraSound;
 
+    private String mStorage;
+
     private Runnable mDoSnapRunnable = new Runnable() {
         public void run() {
             onShutterButtonClick();
@@ -419,7 +421,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
         MessageQueue queue = Looper.myQueue();
         queue.addIdleHandler(new MessageQueue.IdleHandler() {
             public boolean queueIdle() {
-                Storage.ensureOSXCompatible();
+                Storage.ensureOSXCompatible(mStorage);
                 return false;
             }
         });
@@ -435,7 +437,8 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
         // Update last image if URI is invalid and the storage is ready.
         if ((mThumbnail == null || !Util.isUriValid(mThumbnail.getUri(), mContentResolver))
                 && mPicturesRemaining >= 0) {
-            mThumbnail = Thumbnail.getLastThumbnail(mContentResolver);
+            mThumbnail = Thumbnail.getLastThumbnail(mContentResolver,
+                Storage.generateBucketId(mStorage));
         }
         if (mThumbnail != null) {
             mThumbnailView.setBitmap(mThumbnail.getBitmap());
@@ -1019,7 +1022,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
                 int height, long dateTaken, int previewWidth) {
             String title = Util.createJpegName(dateTaken);
             int orientation = Exif.getOrientation(data);
-            Uri uri = Storage.addImage(mContentResolver, title, dateTaken,
+            Uri uri = Storage.addImage(mContentResolver, mStorage, title, dateTaken,
                     loc, orientation, data, width, height);
             if (uri != null) {
                 boolean needThumbnail;
@@ -1144,6 +1147,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         getPreferredCameraId();
+        mStorage = CameraSettings.readStorage(mPreferences);
         String[] defaultFocusModes = getResources().getStringArray(
                 R.array.pref_camera_focusmode_default_array);
         mFocusManager = new FocusManager(mPreferences, defaultFocusModes);
@@ -1283,6 +1287,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
                 CameraSettings.KEY_SCENE_MODE};
         final String[] OTHER_SETTING_KEYS = {
                 CameraSettings.KEY_RECORD_LOCATION,
+                CameraSettings.KEY_STORAGE,
                 CameraSettings.KEY_PICTURE_SIZE,
                 CameraSettings.KEY_FOCUS_MODE,
                 CameraSettings.KEY_TIMER_MODE};
@@ -1362,7 +1367,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
     }
 
     private void checkStorage() {
-        mPicturesRemaining = Storage.getAvailableSpace();
+        mPicturesRemaining = Storage.getAvailableSpace(mStorage);
         if (mPicturesRemaining > Storage.LOW_STORAGE_THRESHOLD) {
             mPicturesRemaining = (mPicturesRemaining - Storage.LOW_STORAGE_THRESHOLD)
                     / Storage.PICTURE_SIZE;
@@ -2169,7 +2174,7 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
     }
 
     private void gotoGallery() {
-        MenuHelper.gotoCameraImageGallery(this);
+        MenuHelper.gotoCameraImageGallery(this, Storage.generateBucketId(mStorage));
     }
 
     private boolean isCameraIdle() {
@@ -2287,6 +2292,12 @@ public class Camera extends ActivityBase implements FocusManager.Listener,
         boolean recordLocation = RecordLocationPreference.get(
                 mPreferences, getContentResolver());
         mLocationManager.recordLocation(recordLocation);
+
+        String storage = CameraSettings.readStorage(mPreferences);
+        if (!storage.equals(mStorage)) {
+            mStorage = storage;
+            checkStorage();
+        }
 
         int cameraId = CameraSettings.readPreferredCameraId(mPreferences);
         if (mCameraId != cameraId) {
