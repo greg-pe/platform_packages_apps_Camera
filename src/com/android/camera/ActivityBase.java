@@ -38,6 +38,7 @@ abstract public class ActivityBase extends Activity {
     private boolean mOnResumePending;
     private Intent mResultDataForTesting;
     protected Camera mCameraDevice;
+    protected String mCaptureMode;
 
     @Override
     public void onCreate(Bundle icicle) {
