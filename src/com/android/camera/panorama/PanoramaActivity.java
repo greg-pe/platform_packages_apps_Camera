@@ -20,8 +20,6 @@ import com.android.camera.ActivityBase;
 import com.android.camera.CameraDisabledException;
 import com.android.camera.CameraHardwareException;
 import com.android.camera.CameraHolder;
-import com.android.camera.CameraSettings;
-import com.android.camera.ComboPreferences;
 import com.android.camera.Exif;
 import com.android.camera.MenuHelper;
 import com.android.camera.ModePicker;
@@ -109,9 +107,6 @@ public class PanoramaActivity extends ActivityBase implements
 
     // Ratio of nanosecond to second
     private static final float NS2S = 1.0f / 1000000000.0f;
-
-    private ComboPreferences mPreferences;
-    private String mStorage;
 
     private boolean mPausing;
 
@@ -273,13 +268,6 @@ public class PanoramaActivity extends ActivityBase implements
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-
-        mPreferences = new ComboPreferences(this);
-        CameraSettings.upgradeGlobalPreferences(mPreferences.getGlobal());
-        powerShutter(mPreferences);
-        mPreferences.setLocalId(this, CameraHolder.instance().getBackCameraId());
-        CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
-        mStorage = CameraSettings.readStorage(mPreferences);
 
         Window window = getWindow();
         Util.enterLightsOutMode(window);
@@ -829,8 +817,7 @@ public class PanoramaActivity extends ActivityBase implements
         // Update last image if URI is invalid and the storage is ready.
         ContentResolver contentResolver = getContentResolver();
         if ((mThumbnail == null || !Util.isUriValid(mThumbnail.getUri(), contentResolver))) {
-            mThumbnail = Thumbnail.getLastThumbnail(contentResolver,
-                Storage.generateBucketId(mStorage));
+            mThumbnail = Thumbnail.getLastThumbnail(contentResolver);
         }
         if (mThumbnail != null) {
             mThumbnailView.setBitmap(mThumbnail.getBitmap());
@@ -961,10 +948,10 @@ public class PanoramaActivity extends ActivityBase implements
         if (jpegData != null) {
             String filename = PanoUtil.createName(
                     getResources().getString(R.string.pano_file_name_format), mTimeTaken);
-            Uri uri = Storage.addImage(getContentResolver(), mStorage, filename, mTimeTaken, null,
+            Uri uri = Storage.addImage(getContentResolver(), filename, mTimeTaken, null,
                     orientation, jpegData, width, height);
             if (uri != null && orientation != 0) {
-                String filepath = Storage.generateFilepath(mStorage, filename);
+                String filepath = Storage.generateFilepath(filename);
                 try {
                     // Save the orientation in EXIF.
                     ExifInterface exif = new ExifInterface(filepath);
